@@ -2,8 +2,6 @@
 #![no_main]
 extern crate alloc;
 
-use alloc::vec;
-use alloc::vec::Vec;
 use core::mem::MaybeUninit;
 use firefly_rust::*;
 use rsc8::chip8::Chip8;
@@ -64,7 +62,8 @@ extern "C" fn update() {
     handle_input(state);
 
     let chip8 = &mut state.chip8;
-    for _ in 0..8 {
+    // 17 ticks with 60 FPS result in ~1MHz
+    for _ in 0..17 {
         chip8.tick().unwrap();
     }
     chip8.tick_timer();
@@ -78,17 +77,20 @@ fn handle_input(state: &mut State) {
     let pad = pad.unwrap_or_default();
     let dpad = pad.as_dpad8();
     chip8.keypad[0] = dpad.left && dpad.up;
-    chip8.keypad[1] = dpad.up;
+    chip8.keypad[1] = dpad.up && !dpad.left && !dpad.right;
     chip8.keypad[2] = dpad.up && dpad.right;
-    chip8.keypad[4] = dpad.left;
+    chip8.keypad[4] = dpad.left && !dpad.up && !dpad.down;
     chip8.keypad[5] = !dpad.any() && pressed;
-    chip8.keypad[6] = dpad.right;
+    chip8.keypad[6] = dpad.right && !dpad.up && !dpad.down;
     chip8.keypad[8] = dpad.left && dpad.down;
-    chip8.keypad[9] = dpad.down;
+    chip8.keypad[9] = dpad.down && !dpad.left && !dpad.right;
     chip8.keypad[10] = dpad.down && dpad.right;
 
     let btns = read_buttons(Peer::COMBINED);
-    // ...
+    chip8.keypad[3] = btns.s;
+    chip8.keypad[7] = btns.e;
+    chip8.keypad[11] = btns.w;
+    chip8.keypad[13] = btns.n;
 }
 
 #[unsafe(no_mangle)]
@@ -117,5 +119,4 @@ extern "C" fn render() {
         let p = Point::new(x, y);
         draw_rect(p, size, Style::solid(state.theme.primary));
     }
-    // ...
 }
