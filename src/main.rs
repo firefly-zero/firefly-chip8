@@ -27,6 +27,7 @@ impl Iterator for Rng {
 
 struct State {
     chip8: Chip8<Rng>,
+    theme: Theme,
 }
 
 fn get_state() -> &'static mut State {
@@ -49,7 +50,8 @@ extern "C" fn boot() {
         log_error("invalid rom");
         panic!();
     }
-    let state = State { chip8 };
+    let theme = get_settings(get_me()).theme;
+    let state = State { chip8, theme };
     #[allow(static_mut_refs)]
     unsafe {
         STATE.write(state)
@@ -98,11 +100,11 @@ extern "C" fn render() {
     }
     chip8.draw_flag = false;
 
-    clear_screen(Color::Black);
+    clear_screen(state.theme.secondary);
     draw_rect(
         Point::new((WIDTH - AREA_WIDTH) / 2, (HEIGHT - AREA_HEIGHT) / 2),
         Size::new(AREA_WIDTH, AREA_HEIGHT),
-        Style::solid(Color::White),
+        Style::solid(state.theme.bg),
     );
 
     let size = Size::new(SCALE, SCALE);
@@ -113,7 +115,7 @@ extern "C" fn render() {
         let x = (WIDTH - AREA_WIDTH) / 2 + (i % SCREEN_WIDTH) * SCALE;
         let y = (HEIGHT - AREA_HEIGHT) / 2 + (i / SCREEN_WIDTH) * SCALE;
         let p = Point::new(x, y);
-        draw_rect(p, size, Style::solid(Color::DarkGreen));
+        draw_rect(p, size, Style::solid(state.theme.primary));
     }
     // ...
 }
