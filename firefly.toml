@@ -6,3 +6,4 @@ lang = "rust"
 
 [files]
 main = { path = "Pong [Paul Vervalin, 1990].ch8", copy = true }
+config = { path = "config.txt", copy = true }

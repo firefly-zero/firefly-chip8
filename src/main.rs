@@ -1,7 +1,10 @@
 #![no_std]
 #![no_main]
+mod config;
+
 extern crate alloc;
 
+use config::*;
 use core::mem::MaybeUninit;
 use firefly_rust::*;
 use rsc8::chip8::Chip8;
@@ -26,6 +29,7 @@ impl Iterator for Rng {
 struct State {
     chip8: Chip8<Rng>,
     screen: [u8; 64 * 32],
+    config: Config,
     plays: bool,
 }
 
@@ -53,6 +57,7 @@ extern "C" fn boot() {
     let state = State {
         chip8,
         screen: [0; 32 * 64],
+        config: Config::load().unwrap_or_default(),
         plays: false,
     };
     clear_screen(Color::Black);
@@ -68,16 +73,21 @@ extern "C" fn update() {
     handle_input(state);
     let chip8 = &mut state.chip8;
 
+    // Play audio.
     if state.plays && chip8.sound_timer == 0 {
         audio::OUT.clear();
         state.plays = false;
     } else if !state.plays && chip8.sound_timer > 0 {
+        // Other emulators play a sine wave but the current firefly-audio
+        // implementation sharply cuts the audio as soon as it's stopped
+        // resulting in a sharp audio spike. This spike is less apparent
+        // with a triangle wave.
         audio::OUT.add_triangle(audio::Freq::C4, 0.);
         state.plays = true;
     }
 
-    // 17 ticks with 60 FPS result in ~1MHz
-    for _ in 0..17 {
+    // Advance the virtual CHIP-8 CPU.
+    for _ in 0..state.config.speed {
         chip8.tick().unwrap();
     }
     chip8.tick_timer();
@@ -86,28 +96,24 @@ extern "C" fn update() {
 fn handle_input(state: &mut State) {
     let chip8 = &mut state.chip8;
 
-    let pad = read_pad(Peer::COMBINED);
-    let pressed = pad.is_some();
-    let pad = pad.unwrap_or_default();
+    let pad = read_pad(Peer::COMBINED).unwrap_or_default();
     let dpad = pad.as_dpad8();
-    chip8.keypad[1] = dpad.left && dpad.up;
-    chip8.keypad[2] = dpad.up && !dpad.left && !dpad.right;
-    chip8.keypad[3] = dpad.up && dpad.right;
-    chip8.keypad[4] = dpad.left && !dpad.up && !dpad.down;
-    chip8.keypad[5] = !dpad.any() && pressed;
-    chip8.keypad[6] = dpad.right && !dpad.up && !dpad.down;
-    chip8.keypad[7] = dpad.left && dpad.down;
-    chip8.keypad[8] = dpad.down && !dpad.left && !dpad.right;
-    chip8.keypad[9] = dpad.down && dpad.right;
-
     let btns = read_buttons(Peer::COMBINED);
-    chip8.keypad[0] = btns.n;
-    chip8.keypad[0xA] = btns.s;
-    chip8.keypad[0xB] = btns.e;
-    chip8.keypad[0xC] = btns.w;
-    chip8.keypad[0xD] = btns.s && btns.e;
-    chip8.keypad[0xE] = btns.n && btns.w;
-    chip8.keypad[0xF] = btns.s && btns.n;
+    for (i, input) in state.config.inputs.iter().enumerate() {
+        let Some((_peer, input)) = input else {
+            continue;
+        };
+        chip8.keypad[i] = match input {
+            Input::L => dpad.left,
+            Input::R => dpad.right,
+            Input::U => dpad.up,
+            Input::D => dpad.down,
+            Input::S => btns.s,
+            Input::E => btns.e,
+            Input::W => btns.w,
+            Input::N => btns.n,
+        }
+    }
 }
 
 #[unsafe(no_mangle)]
