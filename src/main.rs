@@ -1,33 +1,25 @@
 #![no_std]
 #![no_main]
 mod config;
+mod interpreter;
+mod opcodes;
 
 extern crate alloc;
 
 use config::*;
 use core::mem::MaybeUninit;
 use firefly_rust::*;
-use rsc8::chip8::Chip8;
+use interpreter::*;
 
 static mut STATE: MaybeUninit<State> = MaybeUninit::uninit();
 const SCALE: i32 = 3;
-const SCREEN_WIDTH: i32 = rsc8::chip8::SCREEN_WIDTH as i32;
-const SCREEN_HEIGHT: i32 = rsc8::chip8::SCREEN_HEIGHT as i32;
+const SCREEN_WIDTH: i32 = interpreter::SCREEN_WIDTH as i32;
+const SCREEN_HEIGHT: i32 = interpreter::SCREEN_HEIGHT as i32;
 const AREA_WIDTH: i32 = SCREEN_WIDTH * SCALE;
 const AREA_HEIGHT: i32 = SCREEN_HEIGHT * SCALE;
 
-struct Rng;
-
-impl Iterator for Rng {
-    type Item = u16;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        Some(get_random() as u16)
-    }
-}
-
 struct State {
-    chip8: Chip8<Rng>,
+    chip8: Chip8,
     screen: [u8; 64 * 32],
     config: Config,
     plays: bool,
@@ -42,17 +34,14 @@ fn get_state() -> &'static mut State {
 
 #[unsafe(no_mangle)]
 extern "C" fn boot() {
-    let mut chip8 = Chip8::new(Rng);
-    chip8.load_fontset();
     let Some(file) = load_file_buf("main") else {
         log_error("main file not found");
         panic!();
     };
-    let res = chip8.load_rom(file.as_bytes());
-    if res.is_err() {
+    let Ok(chip8) = Chip8::new(file.as_bytes()) else {
         log_error("invalid rom");
         panic!();
-    }
+    };
 
     let state = State {
         chip8,
@@ -88,9 +77,9 @@ extern "C" fn update() {
 
     // Advance the virtual CHIP-8 CPU.
     for _ in 0..state.config.speed {
-        chip8.tick().unwrap();
+        chip8.step().unwrap();
     }
-    chip8.tick_timer();
+    chip8.tick();
 }
 
 fn handle_input(state: &mut State) {
@@ -99,7 +88,7 @@ fn handle_input(state: &mut State) {
         let Some((peer, input)) = input else {
             continue;
         };
-        chip8.keypad[i] = match input {
+        chip8.input[i] = match input {
             Input::L => read_dpad(*peer).left,
             Input::R => read_dpad(*peer).right,
             Input::U => read_dpad(*peer).up,
