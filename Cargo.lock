@@ -7,6 +7,7 @@ name = "firefly-chip8"
 version = "0.1.0"
 dependencies = [
  "firefly-rust",
+ "rsc8_core",
 ]
 
 [[package]]
@@ -26,6 +27,11 @@ checksum = "224399e74b87b5f3557511d98dff8b14089b3dadafcab6bb93eab67d3aace965"
 dependencies = [
  "scopeguard",
 ]
+
+[[package]]
+name = "rsc8_core"
+version = "0.1.1"
+source = "git+https://github.com/jerryshell/rsc8.git?rev=e255d371a0d80001fc63482ca1bf7fa5055a74b1#e255d371a0d80001fc63482ca1bf7fa5055a74b1"
 
 [[package]]
 name = "scopeguard"

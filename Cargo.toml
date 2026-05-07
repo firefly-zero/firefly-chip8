@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 firefly-rust = { version = "0.13.2", features = ["alloc", "talc"] }
+rsc8 = { package = "rsc8_core", git = "https://github.com/jerryshell/rsc8.git", rev = "e255d371a0d80001fc63482ca1bf7fa5055a74b1" }
 
 # https://github.com/johnthagen/min-sized-rust
 [profile.release]

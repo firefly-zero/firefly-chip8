@@ -3,3 +3,6 @@ app_id = "chip8"
 author_name = "Demo"
 app_name = "CHIP-8"
 lang = "rust"
+
+[files]
+main = { path = "Landing.ch8", copy = true }
