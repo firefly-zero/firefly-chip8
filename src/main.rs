@@ -6,9 +6,14 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::mem::MaybeUninit;
 use firefly_rust::*;
-use rsc8::chip8::{Chip8, SCREEN_HEIGHT, SCREEN_WIDTH};
+use rsc8::chip8::Chip8;
 
 static mut STATE: MaybeUninit<State> = MaybeUninit::uninit();
+const SCALE: i32 = 3;
+const SCREEN_WIDTH: i32 = rsc8::chip8::SCREEN_WIDTH as i32;
+const SCREEN_HEIGHT: i32 = rsc8::chip8::SCREEN_HEIGHT as i32;
+const AREA_WIDTH: i32 = SCREEN_WIDTH * SCALE;
+const AREA_HEIGHT: i32 = SCREEN_HEIGHT * SCALE;
 
 struct Rng;
 
@@ -80,15 +85,23 @@ extern "C" fn render() {
         return;
     }
     chip8.draw_flag = false;
-    clear_screen(Color::White);
+
+    clear_screen(Color::Black);
+    draw_rect(
+        Point::new((WIDTH - AREA_WIDTH) / 2, (HEIGHT - AREA_HEIGHT) / 2),
+        Size::new(AREA_WIDTH, AREA_HEIGHT),
+        Style::solid(Color::White),
+    );
+
+    let size = Size::new(SCALE, SCALE);
     for (set, i) in chip8.screen.iter().zip(0..) {
         if !set {
             continue;
         }
-        let x = (WIDTH - SCREEN_WIDTH as i32) / 2 + i % SCREEN_WIDTH as i32;
-        let y = (HEIGHT - SCREEN_HEIGHT as i32) / 2 + i / SCREEN_WIDTH as i32;
+        let x = (WIDTH - AREA_WIDTH) / 2 + (i % SCREEN_WIDTH) * SCALE;
+        let y = (HEIGHT - AREA_HEIGHT) / 2 + (i / SCREEN_WIDTH) * SCALE;
         let p = Point::new(x, y);
-        draw_point(p, Color::DarkBlue);
+        draw_rect(p, size, Style::solid(Color::DarkBlue));
     }
     // ...
 }
