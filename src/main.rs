@@ -55,6 +55,7 @@ extern "C" fn boot() {
         theme: get_settings(get_me()).theme,
         plays: false,
     };
+    clear_screen(state.theme.secondary);
     #[allow(static_mut_refs)]
     unsafe {
         STATE.write(state)
@@ -118,7 +119,6 @@ extern "C" fn render() {
     }
     chip8.draw_flag = false;
 
-    clear_screen(state.theme.secondary);
     draw_rect(
         Point::new((WIDTH - AREA_WIDTH) / 2, (HEIGHT - AREA_HEIGHT) / 2),
         Size::new(AREA_WIDTH, AREA_HEIGHT),
