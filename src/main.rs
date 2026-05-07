@@ -26,6 +26,7 @@ impl Iterator for Rng {
 struct State {
     chip8: Chip8<Rng>,
     theme: Theme,
+    plays: bool,
 }
 
 fn get_state() -> &'static mut State {
@@ -48,8 +49,12 @@ extern "C" fn boot() {
         log_error("invalid rom");
         panic!();
     }
-    let theme = get_settings(get_me()).theme;
-    let state = State { chip8, theme };
+
+    let state = State {
+        chip8,
+        theme: get_settings(get_me()).theme,
+        plays: false,
+    };
     #[allow(static_mut_refs)]
     unsafe {
         STATE.write(state)
@@ -60,8 +65,16 @@ extern "C" fn boot() {
 extern "C" fn update() {
     let state = get_state();
     handle_input(state);
-
     let chip8 = &mut state.chip8;
+
+    if state.plays && chip8.sound_timer == 0 {
+        audio::OUT.clear();
+        state.plays = false;
+    } else if !state.plays && chip8.sound_timer > 0 {
+        audio::OUT.add_triangle(audio::Freq::C4, 0.);
+        state.plays = true;
+    }
+
     // 17 ticks with 60 FPS result in ~1MHz
     for _ in 0..17 {
         chip8.tick().unwrap();
@@ -93,6 +106,7 @@ fn handle_input(state: &mut State) {
     chip8.keypad[0xC] = btns.w;
     chip8.keypad[0xD] = btns.s && btns.e;
     chip8.keypad[0xE] = btns.n && btns.w;
+    chip8.keypad[0xF] = btns.s && btns.n;
 }
 
 #[unsafe(no_mangle)]
