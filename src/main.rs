@@ -69,9 +69,21 @@ extern "C" fn update() {
 }
 
 fn handle_input(state: &mut State) {
-    let pad = read_pad(Peer::COMBINED).unwrap_or_default();
+    let chip8 = &mut state.chip8;
+
+    let pad = read_pad(Peer::COMBINED);
+    let pressed = pad.is_some();
+    let pad = pad.unwrap_or_default();
     let dpad = pad.as_dpad8();
-    // ...
+    chip8.keypad[0] = dpad.left && dpad.up;
+    chip8.keypad[1] = dpad.up;
+    chip8.keypad[2] = dpad.up && dpad.right;
+    chip8.keypad[4] = dpad.left;
+    chip8.keypad[5] = !dpad.any() && pressed;
+    chip8.keypad[6] = dpad.right;
+    chip8.keypad[8] = dpad.left && dpad.down;
+    chip8.keypad[9] = dpad.down;
+    chip8.keypad[10] = dpad.down && dpad.right;
 
     let btns = read_buttons(Peer::COMBINED);
     // ...
@@ -101,7 +113,7 @@ extern "C" fn render() {
         let x = (WIDTH - AREA_WIDTH) / 2 + (i % SCREEN_WIDTH) * SCALE;
         let y = (HEIGHT - AREA_HEIGHT) / 2 + (i / SCREEN_WIDTH) * SCALE;
         let p = Point::new(x, y);
-        draw_rect(p, size, Style::solid(Color::DarkBlue));
+        draw_rect(p, size, Style::solid(Color::DarkGreen));
     }
     // ...
 }
