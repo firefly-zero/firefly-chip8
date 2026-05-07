@@ -1,0 +1,5 @@
+author_id = "demo"
+app_id = "chip8"
+author_name = "Demo"
+app_name = "CHIP-8"
+lang = "rust"

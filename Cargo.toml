@@ -1,0 +1,13 @@
+[package]
+name = "firefly-chip8"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+firefly-rust = { version = "0.13.2", features = ["alloc", "talc"] }
+
+# https://github.com/johnthagen/min-sized-rust
+[profile.release]
+strip = true    # Automatically strip symbols from the binary.
+opt-level = "z" # Optimize for size.
+lto = true      # Enable link-time optimization
