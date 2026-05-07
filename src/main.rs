@@ -76,21 +76,23 @@ fn handle_input(state: &mut State) {
     let pressed = pad.is_some();
     let pad = pad.unwrap_or_default();
     let dpad = pad.as_dpad8();
-    chip8.keypad[0] = dpad.left && dpad.up;
-    chip8.keypad[1] = dpad.up && !dpad.left && !dpad.right;
-    chip8.keypad[2] = dpad.up && dpad.right;
+    chip8.keypad[1] = dpad.left && dpad.up;
+    chip8.keypad[2] = dpad.up && !dpad.left && !dpad.right;
+    chip8.keypad[3] = dpad.up && dpad.right;
     chip8.keypad[4] = dpad.left && !dpad.up && !dpad.down;
     chip8.keypad[5] = !dpad.any() && pressed;
     chip8.keypad[6] = dpad.right && !dpad.up && !dpad.down;
-    chip8.keypad[8] = dpad.left && dpad.down;
-    chip8.keypad[9] = dpad.down && !dpad.left && !dpad.right;
-    chip8.keypad[10] = dpad.down && dpad.right;
+    chip8.keypad[7] = dpad.left && dpad.down;
+    chip8.keypad[8] = dpad.down && !dpad.left && !dpad.right;
+    chip8.keypad[9] = dpad.down && dpad.right;
 
     let btns = read_buttons(Peer::COMBINED);
-    chip8.keypad[3] = btns.s;
-    chip8.keypad[7] = btns.e;
-    chip8.keypad[11] = btns.w;
-    chip8.keypad[13] = btns.n;
+    chip8.keypad[0] = btns.n;
+    chip8.keypad[0xA] = btns.s;
+    chip8.keypad[0xB] = btns.e;
+    chip8.keypad[0xC] = btns.w;
+    chip8.keypad[0xD] = btns.s && btns.e;
+    chip8.keypad[0xE] = btns.n && btns.w;
 }
 
 #[unsafe(no_mangle)]
