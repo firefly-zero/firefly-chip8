@@ -5,4 +5,4 @@ app_name = "CHIP-8"
 lang = "rust"
 
 [files]
-main = { path = "Landing.ch8", copy = true }
+main = { path = "Pong [Paul Vervalin, 1990].ch8", copy = true }

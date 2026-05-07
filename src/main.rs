@@ -25,7 +25,7 @@ impl Iterator for Rng {
 
 struct State {
     chip8: Chip8<Rng>,
-    theme: Theme,
+    screen: [u8; 64 * 32],
     plays: bool,
 }
 
@@ -52,10 +52,10 @@ extern "C" fn boot() {
 
     let state = State {
         chip8,
-        theme: get_settings(get_me()).theme,
+        screen: [0; 32 * 64],
         plays: false,
     };
-    clear_screen(state.theme.secondary);
+    clear_screen(Color::Black);
     #[allow(static_mut_refs)]
     unsafe {
         STATE.write(state)
@@ -114,25 +114,32 @@ fn handle_input(state: &mut State) {
 extern "C" fn render() {
     let state = get_state();
     let chip8 = &mut state.chip8;
-    if !chip8.draw_flag {
-        return;
-    }
-    chip8.draw_flag = false;
 
     draw_rect(
         Point::new((WIDTH - AREA_WIDTH) / 2, (HEIGHT - AREA_HEIGHT) / 2),
         Size::new(AREA_WIDTH, AREA_HEIGHT),
-        Style::solid(state.theme.bg),
+        Style::solid(Color::White),
     );
 
-    let size = Size::new(SCALE, SCALE);
-    for (set, i) in chip8.screen.iter().zip(0..) {
-        if !set {
-            continue;
+    for (i, set) in chip8.screen.iter().enumerate() {
+        if *set {
+            state.screen[i] = 3;
+        } else {
+            state.screen[i] = state.screen[i].saturating_sub(1);
         }
+    }
+
+    let size = Size::new(SCALE, SCALE);
+    for (color, i) in state.screen.iter().zip(0..) {
+        let color = match color {
+            0 => continue,
+            1 => Color::LightBlue,
+            2 => Color::Blue,
+            _ => Color::DarkBlue,
+        };
         let x = (WIDTH - AREA_WIDTH) / 2 + (i % SCREEN_WIDTH) * SCALE;
         let y = (HEIGHT - AREA_HEIGHT) / 2 + (i / SCREEN_WIDTH) * SCALE;
         let p = Point::new(x, y);
-        draw_rect(p, size, Style::solid(state.theme.primary));
+        draw_rect(p, size, Style::solid(color));
     }
 }
