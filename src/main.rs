@@ -95,25 +95,25 @@ extern "C" fn update() {
 
 fn handle_input(state: &mut State) {
     let chip8 = &mut state.chip8;
-
-    let pad = read_pad(Peer::COMBINED).unwrap_or_default();
-    let dpad = pad.as_dpad8();
-    let btns = read_buttons(Peer::COMBINED);
     for (i, input) in state.config.inputs.iter().enumerate() {
-        let Some((_peer, input)) = input else {
+        let Some((peer, input)) = input else {
             continue;
         };
         chip8.keypad[i] = match input {
-            Input::L => dpad.left,
-            Input::R => dpad.right,
-            Input::U => dpad.up,
-            Input::D => dpad.down,
-            Input::S => btns.s,
-            Input::E => btns.e,
-            Input::W => btns.w,
-            Input::N => btns.n,
+            Input::L => read_dpad(*peer).left,
+            Input::R => read_dpad(*peer).right,
+            Input::U => read_dpad(*peer).up,
+            Input::D => read_dpad(*peer).down,
+            Input::S => read_buttons(*peer).s,
+            Input::E => read_buttons(*peer).e,
+            Input::W => read_buttons(*peer).w,
+            Input::N => read_buttons(*peer).n,
         }
     }
+}
+
+fn read_dpad(peer: Peer) -> DPad8 {
+    read_pad(peer).unwrap_or_default().as_dpad8()
 }
 
 #[unsafe(no_mangle)]
