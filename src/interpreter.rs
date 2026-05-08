@@ -1,3 +1,5 @@
+use alloc::boxed::Box;
+use alloc::vec;
 use firefly_rust::get_random;
 
 use crate::opcodes::Opcode;
@@ -31,7 +33,7 @@ const FONT: [u8; 80] = [
 ];
 
 pub struct Chip8 {
-    mem: [u8; MEMORY_SIZE],
+    mem: Box<[u8]>,
     program_cnt: u16,
     reg_v: [u8; 16],
     reg_i: u16,
@@ -40,14 +42,14 @@ pub struct Chip8 {
     stack: [u16; 16],
     stack_ptr: u8,
     pub input: [bool; 16],
-    pub screen: [bool; SCREEN_WIDTH * SCREEN_HEIGHT],
+    pub screen: Box<[bool]>,
 }
 
 impl Chip8 {
     pub fn new(rom: &[u8]) -> Result<Self, &'static str> {
         pub const ROM_START: usize = 512;
 
-        let mut memory = [0; MEMORY_SIZE];
+        let mut memory = vec![0; MEMORY_SIZE];
         memory[..FONT.len()].copy_from_slice(&FONT);
         let max_size = MEMORY_SIZE - ROM_START;
         if rom.len() > max_size {
@@ -57,7 +59,7 @@ impl Chip8 {
         memory[ROM_START..rom_end].copy_from_slice(rom);
 
         let chip8 = Self {
-            mem: memory,
+            mem: memory.into_boxed_slice(),
             program_cnt: 0x200,
             reg_v: [0; _],
             reg_i: 0,
@@ -66,7 +68,7 @@ impl Chip8 {
             stack: [0; _],
             stack_ptr: 0,
             input: [false; _],
-            screen: [false; _],
+            screen: vec![false; SCREEN_WIDTH * SCREEN_HEIGHT].into_boxed_slice(),
         };
         Ok(chip8)
     }
@@ -169,7 +171,7 @@ impl Chip8 {
     fn exec(&mut self, opcode: Opcode) -> Result<(), &'static str> {
         match opcode {
             Opcode::I00E0 => {
-                self.screen = [false; SCREEN_WIDTH * SCREEN_HEIGHT];
+                self.screen.fill(false);
             }
             Opcode::I00EE => {
                 self.program_cnt = self.pop()?;
