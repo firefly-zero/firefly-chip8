@@ -6,6 +6,8 @@ mod opcodes;
 
 extern crate alloc;
 
+use alloc::boxed::Box;
+use alloc::vec;
 use config::*;
 use core::mem::MaybeUninit;
 use firefly_rust::*;
@@ -20,7 +22,7 @@ const AREA_HEIGHT: i32 = SCREEN_HEIGHT * SCALE;
 
 struct State {
     chip8: Chip8,
-    screen: [u8; 64 * 32],
+    screen: Box<[u8]>,
     config: Config,
     plays: bool,
 }
@@ -45,7 +47,7 @@ extern "C" fn boot() {
 
     let state = State {
         chip8,
-        screen: [0; 32 * 64],
+        screen: vec![0; 32 * 64].into_boxed_slice(),
         config: Config::load().unwrap_or_default(),
         plays: false,
     };
