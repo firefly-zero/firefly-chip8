@@ -1,4 +1,5 @@
 #[expect(clippy::upper_case_acronyms)]
+#[derive(Clone, Copy)]
 pub enum Opcode {
     /// 00E0. `cls`: Clear Screen
     I00E0,

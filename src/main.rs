@@ -76,10 +76,11 @@ extern "C" fn update() {
     }
 
     // Advance the virtual CHIP-8 CPU.
-    for _ in 0..state.config.speed {
-        chip8.step().unwrap();
+    let res = chip8.update(state.config.speed);
+    if let Err(err) = res {
+        log_error(err);
+        panic!();
     }
-    chip8.tick();
 }
 
 fn handle_input(state: &mut State) {

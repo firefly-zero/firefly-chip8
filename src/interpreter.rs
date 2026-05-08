@@ -71,19 +71,23 @@ impl Chip8 {
         Ok(chip8)
     }
 
-    // Execute the next opcode.
-    pub fn step(&mut self) -> Result<(), &'static str> {
-        let opcode = self.next()?;
-        let Some(instruction) = Opcode::new(opcode) else {
-            return Err("invalid opcode");
-        };
-        self.exec(&instruction)
-    }
-
-    /// Advance the timer.
-    pub fn tick(&mut self) {
+    /// Run the update cycle.
+    pub fn update(&mut self, steps: u16) -> Result<(), &'static str> {
+        for _ in 0..steps {
+            self.step()?;
+        }
         self.delay_timer = self.delay_timer.saturating_sub(1);
         self.sound_timer = self.sound_timer.saturating_sub(1);
+        Ok(())
+    }
+
+    // Execute the next opcode.
+    fn step(&mut self) -> Result<(), &'static str> {
+        let opcode = self.next()?;
+        let Some(opcode) = Opcode::new(opcode) else {
+            return Err("invalid opcode");
+        };
+        self.exec(opcode)
     }
 
     /// Get the next opcode to execute.
@@ -162,8 +166,8 @@ impl Chip8 {
         Ok(self.input[key_index as usize])
     }
 
-    pub fn exec(&mut self, instruction: &Opcode) -> Result<(), &'static str> {
-        match *instruction {
+    fn exec(&mut self, opcode: Opcode) -> Result<(), &'static str> {
+        match opcode {
             Opcode::I00E0 => {
                 self.screen = [false; SCREEN_WIDTH * SCREEN_HEIGHT];
             }
