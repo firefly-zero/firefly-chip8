@@ -37,6 +37,7 @@ impl Config {
                     return None;
                 };
                 config.speed = speed;
+                continue;
             }
             let Some((idx, peer, input)) = parse_input(line, &peers) else {
                 continue;

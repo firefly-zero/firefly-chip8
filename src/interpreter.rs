@@ -7,6 +7,7 @@ use crate::opcodes::Opcode;
 pub const MEMORY_SIZE: usize = 4096;
 pub const SCREEN_WIDTH: usize = 64;
 pub const SCREEN_HEIGHT: usize = 32;
+pub const TRAILS: u8 = 4;
 
 /// The built-in font.
 ///
@@ -42,7 +43,7 @@ pub struct Chip8 {
     stack: [u16; 16],
     stack_ptr: u8,
     pub input: [bool; 16],
-    pub screen: Box<[bool]>,
+    pub screen: Box<[u8]>,
 }
 
 impl Chip8 {
@@ -68,13 +69,18 @@ impl Chip8 {
             stack: [0; _],
             stack_ptr: 0,
             input: [false; _],
-            screen: vec![false; SCREEN_WIDTH * SCREEN_HEIGHT].into_boxed_slice(),
+            screen: vec![0; SCREEN_WIDTH * SCREEN_HEIGHT].into_boxed_slice(),
         };
         Ok(chip8)
     }
 
     /// Run the update cycle.
     pub fn update(&mut self, steps: u16) -> Result<(), &'static str> {
+        for px in &mut self.screen {
+            if *px != TRAILS {
+                *px = px.saturating_sub(1)
+            }
+        }
         for _ in 0..steps {
             self.step()?;
         }
@@ -171,7 +177,9 @@ impl Chip8 {
     fn exec(&mut self, opcode: Opcode) -> Result<(), &'static str> {
         match opcode {
             Opcode::I00E0 => {
-                self.screen.fill(false);
+                for px in &mut self.screen {
+                    *px = px.saturating_sub(1);
+                }
             }
             Opcode::I00EE => {
                 self.program_cnt = self.pop()?;
@@ -284,10 +292,15 @@ impl Chip8 {
                         let screen_pixel_index =
                             screen_x as usize + screen_y as usize * SCREEN_WIDTH;
                         let screen_pixel = self.screen[screen_pixel_index];
-                        if sprite_pixel && screen_pixel {
+                        if sprite_pixel && screen_pixel == TRAILS {
                             self.reg_v[0xF] = 1;
                         }
-                        self.screen[screen_pixel_index] ^= sprite_pixel;
+                        self.screen[screen_pixel_index] =
+                            match (screen_pixel == TRAILS, sprite_pixel) {
+                                (false, false) => screen_pixel,
+                                (true, false) | (false, true) => TRAILS,
+                                (true, true) => TRAILS - 1,
+                            }
                     }
                 }
             }
