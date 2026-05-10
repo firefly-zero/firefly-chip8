@@ -121,7 +121,7 @@ extern "C" fn render() {
 
     for (i, set) in chip8.screen.iter().enumerate() {
         if *set {
-            state.screen[i] = 3;
+            state.screen[i] = 4;
         } else {
             state.screen[i] = state.screen[i].saturating_sub(1);
         }
@@ -131,9 +131,10 @@ extern "C" fn render() {
     for (color, i) in state.screen.iter().zip(0..) {
         let color = match color {
             0 => continue,
-            1 => Color::LightBlue,
-            2 => Color::Blue,
-            _ => Color::DarkBlue,
+            1 => Color::LightGray,
+            2 => Color::Gray,
+            3 => Color::DarkGray,
+            _ => Color::Black,
         };
         let x = (WIDTH - AREA_WIDTH) / 2 + (i % SCREEN_WIDTH) * SCALE;
         let y = (HEIGHT - AREA_HEIGHT) / 2 + (i / SCREEN_WIDTH) * SCALE;

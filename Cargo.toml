@@ -9,5 +9,5 @@ firefly-rust = { version = "0.13.2", features = ["alloc", "talc"] }
 # https://github.com/johnthagen/min-sized-rust
 [profile.release]
 strip = true    # Automatically strip symbols from the binary.
-opt-level = "z" # Optimize for size.
+opt-level = "s" # Optimize for speed.
 lto = true      # Enable link-time optimization
