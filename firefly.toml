@@ -5,5 +5,6 @@ app_name = "CHIP-8"
 lang = "rust"
 
 [files]
+bg = { path = "bg.png" }
 main = { path = "Pong [Paul Vervalin, 1990].ch8", copy = true }
 config = { path = "config.txt", copy = true }

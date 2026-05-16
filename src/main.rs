@@ -22,6 +22,7 @@ struct State {
     chip8: Chip8,
     config: Config,
     plays: bool,
+    has_bg: bool,
 }
 
 fn get_state() -> &'static mut State {
@@ -42,12 +43,19 @@ extern "C" fn boot() {
         panic!();
     };
 
-    let state = State {
+    let mut state = State {
         chip8,
         config: Config::load().unwrap_or_default(),
         plays: false,
+        has_bg: false,
     };
+
     clear_screen(Color::Black);
+    if let Some(bg) = load_file_buf("bg") {
+        draw_image(&bg.as_image(), Point::new(0, 0));
+        state.has_bg = true;
+    }
+
     #[allow(static_mut_refs)]
     unsafe {
         STATE.write(state)
@@ -109,8 +117,12 @@ extern "C" fn render() {
     let state = get_state();
     let chip8 = &mut state.chip8;
 
+    let mut left = (WIDTH - AREA_WIDTH) / 2;
+    if state.has_bg {
+        left -= 10;
+    }
     draw_rect(
-        Point::new((WIDTH - AREA_WIDTH) / 2, (HEIGHT - AREA_HEIGHT) / 2),
+        Point::new(left, (HEIGHT - AREA_HEIGHT) / 2),
         Size::new(AREA_WIDTH, AREA_HEIGHT),
         Style::solid(Color::White),
     );
@@ -124,7 +136,7 @@ extern "C" fn render() {
             3 => Color::DarkGray,
             _ => Color::Black,
         };
-        let x = (WIDTH - AREA_WIDTH) / 2 + (i % SCREEN_WIDTH) * SCALE;
+        let x = left + (i % SCREEN_WIDTH) * SCALE;
         let y = (HEIGHT - AREA_HEIGHT) / 2 + (i / SCREEN_WIDTH) * SCALE;
         let p = Point::new(x, y);
         draw_rect(p, size, Style::solid(color));
