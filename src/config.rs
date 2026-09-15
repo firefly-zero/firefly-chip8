@@ -26,7 +26,8 @@ impl Config {
         };
         let mut config = Config::default();
         let peers = get_peers().as_vec();
-        for line in file.as_bytes().split(|c| *c == b'\n') {
+        let file = file.into_bytes();
+        for line in file.split(|c| *c == b'\n') {
             if line.is_empty() {
                 continue;
             }

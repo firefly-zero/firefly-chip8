@@ -38,7 +38,8 @@ extern "C" fn boot() {
         log_error("main file not found");
         panic!();
     };
-    let Ok(chip8) = Chip8::new(file.as_bytes()) else {
+    let file = file.into_bytes();
+    let Ok(chip8) = Chip8::new(&file) else {
         log_error("invalid rom");
         panic!();
     };
@@ -52,7 +53,8 @@ extern "C" fn boot() {
 
     clear_screen(Color::Black);
     if let Some(bg) = load_file_buf("bg") {
-        draw_image(&bg.as_image(), Point::new(0, 0));
+        let bg = bg.into_image();
+        draw_image(&bg, Point::new(0, 0));
         state.has_bg = true;
     }
 
