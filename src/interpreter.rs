@@ -340,7 +340,7 @@ impl Chip8 {
                 self.reg_i = self.reg_i.wrapping_add(self.reg_v[x as usize] as u16);
             }
             Opcode::IFX29(x) => {
-                self.reg_i = (self.reg_v[x as usize] * 5) as u16;
+                self.reg_i = (self.reg_v[x as usize] as u16 & 0xF) * 5;
             }
             Opcode::IFX33(x) => {
                 let hundreds = self.reg_v[x as usize] / 100;
